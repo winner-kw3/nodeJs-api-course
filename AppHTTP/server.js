@@ -1,5 +1,5 @@
 const http = require('http');
-const { readDB, writeDB } = require('./modules/db');
+const { getBooks, getBookById, addBook, deleteBook } = require('./modules/router');
 
 const PORT = 3000;
 
@@ -24,77 +24,44 @@ function parseBody(req) {
 
 const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    
+
     if (req.method === 'GET' && url.pathname === '/') {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         res.end('Bienvenue sur le serveur');
         return;
     }
-    
+
     if (req.method === 'GET' && url.pathname === '/books') {
-        try {
-            const books = readDB().books;
-            sendJson(res, 200, { success: true, count: books.length, data: books });
-        } catch (e) {
-            sendJson(res, 500, { success: false, error: 'Erreur interne' });
-        }
+        const result = getBooks();
+        sendJson(res, result.status, result.body);
         return;
     }
-    
+
     if (req.method === 'GET' && url.pathname.match(/^\/books\/(\d+)$/)) {
-        try {
-            const id = parseInt(url.pathname.split('/')[2], 10);
-            const books = readDB().books;
-            const book = books.find(b => b.id === id);
-            if (!book) {
-                sendJson(res, 404, { success: false, error: 'Livre introuvable' });
-                return;
-            }
-            sendJson(res, 200, { success: true, data: book });
-        } catch (e) {
-            sendJson(res, 500, { success: false, error: 'Erreur interne' });
-        }
+        const id = parseInt(url.pathname.split('/')[2], 10);
+        const result = getBookById(id);
+        sendJson(res, result.status, result.body);
         return;
     }
-    
+
     if (req.method === 'POST' && url.pathname === '/books') {
         try {
             const body = await parseBody(req);
-            const { title, author, year } = body;
-            if (!title || !author || !year) {
-                sendJson(res, 400, { success: false, error: 'Les champs title, author et year sont requis' });
-                return;
-            }
-            const db = readDB();
-            const newId = db.books.length > 0 ? Math.max(...db.books.map(b => b.id)) + 1 : 1;
-            const newBook = { id: newId, title, author, year, available: true };
-            db.books.push(newBook);
-            writeDB(db);
-            sendJson(res, 201, { success: true, data: newBook });
+            const result = addBook(body);
+            sendJson(res, result.status, result.body);
         } catch (e) {
-            sendJson(res, 500, { success: false, error: 'Erreur interne' });
+            sendJson(res, 400, { success: false, error: 'Corps de requête invalide' });
         }
         return;
     }
-    
+
     if (req.method === 'DELETE' && url.pathname.match(/^\/books\/(\d+)$/)) {
-        try {
-            const id = parseInt(url.pathname.split('/')[2], 10);
-            const db = readDB();
-            const bookIndex = db.books.findIndex(b => b.id === id);
-            if (bookIndex === -1) {
-                sendJson(res, 404, { success: false, error: 'Livre introuvable' });
-                return;
-            }
-            db.books.splice(bookIndex, 1);
-            writeDB(db);
-            sendJson(res, 200, { success: true, message: 'Livre supprimé' });
-        } catch (e) {
-            sendJson(res, 500, { success: false, error: 'Erreur interne' });
-        }
+        const id = parseInt(url.pathname.split('/')[2], 10);
+        const result = deleteBook(id);
+        sendJson(res, result.status, result.body);
         return;
     }
-    
+
     sendJson(res, 404, { success: false, error: 'Route non trouvée' });
 });
 
