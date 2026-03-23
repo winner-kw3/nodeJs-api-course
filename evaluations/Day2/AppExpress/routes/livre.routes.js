@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const livreController = require("../controllers/livre.controller");
 const { authMiddleware, adminMiddleware } = require("../middlewares/auth.middleware");
+const { validate } = require("../middlewares/validation.middleware");
+const { addBookSchema, updateBookSchema } = require("../schemas/livre.schema");
 
 
 router.get("/", livreController.getBooks);                        
