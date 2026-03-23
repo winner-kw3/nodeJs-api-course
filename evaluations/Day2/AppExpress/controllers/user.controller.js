@@ -6,7 +6,7 @@ const register = async (req, res) => {
         const result = await userService.registerUser(name, email, password);
         res.json(result);
     } catch (e) {
-        res.status(400).json({ message: e.message }); // ← e.message, pas err.message
+        res.status(400).json({ message: e.message }); 
     }
 };
 
@@ -16,7 +16,7 @@ const login = async (req, res) => {
         const result = await userService.loginUser(email, password);
         res.json(result);
     } catch (e) {
-        res.status(400).json({ message: e.message }); // ← e.message, pas err.message
+        res.status(400).json({ message: e.message }); 
     }
 };
 
