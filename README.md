@@ -1,4 +1,4 @@
-## Base URL
+## URL
 https://nodejs-api-course.onrender.com
 
 ## Swagger 
